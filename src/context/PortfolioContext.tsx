@@ -3,8 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Project, InterestCategory, CommunityRole, PersonalInterest } from '../types/portfolio';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+import { supabase } from '../lib/supabase';
+import {
+  Project,
+  InterestCategory,
+  CommunityRole,
+  PersonalInterest,
+} from '../types/portfolio';
 import {
   PERSONAL_INFO,
   PROJECTS,
@@ -79,7 +91,8 @@ const DEFAULT_PORTFOLIO_STATE: PortfolioDataState = {
   leadership: [...LEADERSHIP_ROLES],
   personalPursuits: [...PERSONAL_PURSUITS],
   beyondScreen: {
-    automotiveImage: '/src/assets/images/automotive_concept_sketch_1793534902253.jpg',
+    automotiveImage:
+      '/src/assets/images/automotive_concept_sketch_1793534902253.jpg',
     automotiveTitle: 'Automotive Design Concepts',
     automotiveSubtitle: 'Form, Surfacing & Function',
     automotiveDescription:
@@ -95,8 +108,8 @@ const DEFAULT_PORTFOLIO_STATE: PortfolioDataState = {
 };
 
 const STORAGE_KEY = 'parthiv_portfolio_content_v2';
-const PASSCODE_STORAGE_KEY = 'parthiv_portfolio_admin_passcode';
-const AUTH_SESSION_KEY = 'parthiv_portfolio_is_authenticated';
+const PORTFOLIO_ROW_ID = '00000000-0000-4000-8000-000000000001';
+const ADMIN_EMAIL = 'parthiv99100@gmail.com';
 
 interface PortfolioContextType {
   data: PortfolioDataState;
@@ -105,48 +118,181 @@ interface PortfolioContextType {
   exportDataJson: () => string;
   importDataJson: (jsonString: string) => boolean;
   isAdminAuthenticated: boolean;
-  verifyPasscode: (inputPasscode: string) => boolean;
-  changePasscode: (currentPass: string, newPass: string) => boolean;
-  logoutAdmin: () => void;
+  verifyPasscode: (password: string) => Promise<boolean>;
+  changePasscode: (currentPass: string, newPass: string) => Promise<boolean>;
+  logoutAdmin: () => Promise<void>;
   openAdminModal: () => void;
   closeAdminModal: () => void;
   isAdminModalOpen: boolean;
 }
 
-const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
+const PortfolioContext = createContext<PortfolioContextType | undefined>(
+  undefined
+);
 
-export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<PortfolioDataState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Ensure photoUrl exists
-        if (!parsed.hero.photoUrl) {
-          parsed.hero.photoUrl = '/assets/aistudio/IMG-20260629-WA0039_05fb8796.jpg';
-        }
-        return parsed;
-      }
-    } catch (e) {
-      console.warn('Failed to parse saved portfolio data', e);
-    }
-    return DEFAULT_PORTFOLIO_STATE;
-  });
-
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
-  });
-
+export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [data, setData] = useState<PortfolioDataState>(
+    DEFAULT_PORTFOLIO_STATE
+  );
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
 
-  // Sync to localStorage
+  // Restore the Supabase session and load the shared portfolio content.
+  useEffect(() => {
+    let active = true;
+
+    const loadPortfolio = async () => {
+      try {
+        const { data: result, error } = await supabase
+          .from('portfolio_content')
+          .select('content')
+          .eq('id', PORTFOLIO_ROW_ID)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (active && result?.content) {
+          setData(result.content as PortfolioDataState);
+        }
+      } catch (error) {
+        console.error('Failed to load portfolio from Supabase:', error);
+      } finally {
+        if (active) setContentLoaded(true);
+      }
+    };
+
+    const restoreSession = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (active) {
+        setIsAdminAuthenticated(!!sessionData.session);
+      }
+
+      await loadPortfolio();
+    };
+
+    restoreSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) {
+        setIsAdminAuthenticated(!!session);
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Keep a local backup, but Supabase is the shared source of truth.
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Failed to save portfolio state', e);
+    } catch (error) {
+      console.error('Failed to save local portfolio backup:', error);
     }
   }, [data]);
+
+  // Save changes to Supabase only after an admin has authenticated.
+  useEffect(() => {
+    if (!isAdminAuthenticated || !contentLoaded) return;
+
+    const timeout = window.setTimeout(async () => {
+      const { error } = await supabase.from('portfolio_content').upsert(
+        {
+          id: PORTFOLIO_ROW_ID,
+          content: data,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+      if (error) {
+        console.error('Failed to save portfolio to Supabase:', error);
+      }
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [data, isAdminAuthenticated, contentLoaded]);
+
+  const verifyPasscode = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: ADMIN_EMAIL,
+      password,
+    });
+
+    if (error) {
+      console.error('Admin login failed:', error.message);
+      return false;
+    }
+
+    // If the database is still empty, migrate this browser's existing
+    // portfolio content after the admin has successfully signed in.
+    const { data: existing, error: readError } = await supabase
+      .from('portfolio_content')
+      .select('content')
+      .eq('id', PORTFOLIO_ROW_ID)
+      .maybeSingle();
+
+    if (readError) {
+      console.error('Could not check existing portfolio content:', readError);
+      return false;
+    }
+
+    if (existing?.content) {
+      setData(existing.content as PortfolioDataState);
+    } else {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.hero && parsed?.personalInfo && Array.isArray(parsed?.projects)) {
+            setData(parsed as PortfolioDataState);
+          }
+        }
+      } catch (error) {
+        console.error('Could not read local portfolio backup:', error);
+      }
+    }
+
+    setContentLoaded(true);
+    return true;
+  }, []);
+
+  const changePasscode = useCallback(
+    async (_currentPass: string, newPass: string) => {
+      if (!newPass || newPass.trim().length < 8) return false;
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPass,
+      });
+
+      if (error) {
+        console.error('Password update failed:', error.message);
+        return false;
+      }
+
+      return true;
+    },
+    []
+  );
+
+  const logoutAdmin = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Admin logout failed:', error.message);
+    }
+
+    setIsAdminAuthenticated(false);
+    setIsAdminModalOpen(false);
+  }, []);
 
   const updateData = (updater: (prev: PortfolioDataState) => PortfolioDataState) => {
     setData((prev) => updater(prev));
@@ -154,65 +300,31 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const resetToDefaults = () => {
     setData(DEFAULT_PORTFOLIO_STATE);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
-  const exportDataJson = () => {
-    return JSON.stringify(data, null, 2);
-  };
+  const exportDataJson = () => JSON.stringify(data, null, 2);
 
   const importDataJson = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString);
-      if (parsed.hero && parsed.personalInfo && parsed.projects) {
-        setData(parsed);
+
+      if (
+        parsed?.hero &&
+        parsed?.personalInfo &&
+        Array.isArray(parsed?.projects)
+      ) {
+        setData(parsed as PortfolioDataState);
         return true;
       }
+
       return false;
     } catch {
       return false;
     }
   };
 
-  const getStoredPasscode = (): string => {
-    return localStorage.getItem(PASSCODE_STORAGE_KEY) || 'parthiv';
-  };
-
-  const verifyPasscode = (inputPasscode: string): boolean => {
-    const currentPasscode = getStoredPasscode();
-    // Allow either the customized passcode, 'parthiv', or '99100'
-    const isValid =
-      inputPasscode === currentPasscode ||
-      inputPasscode.trim().toLowerCase() === 'parthiv' ||
-      inputPasscode.trim() === '99100';
-
-    if (isValid) {
-      setIsAdminAuthenticated(true);
-      sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
-    }
-    return isValid;
-  };
-
-  const changePasscode = (currentPass: string, newPass: string): boolean => {
-    if (!verifyPasscode(currentPass)) return false;
-    if (!newPass || newPass.trim().length < 4) return false;
-    localStorage.setItem(PASSCODE_STORAGE_KEY, newPass.trim());
-    return true;
-  };
-
-  const logoutAdmin = () => {
-    setIsAdminAuthenticated(false);
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
-    setIsAdminModalOpen(false);
-  };
-
-  const openAdminModal = () => {
-    setIsAdminModalOpen(true);
-  };
-
-  const closeAdminModal = () => {
-    setIsAdminModalOpen(false);
-  };
+  const openAdminModal = () => setIsAdminModalOpen(true);
+  const closeAdminModal = () => setIsAdminModalOpen(false);
 
   return (
     <PortfolioContext.Provider
@@ -238,8 +350,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const usePortfolio = () => {
   const context = useContext(PortfolioContext);
+
   if (!context) {
     throw new Error('usePortfolio must be used within a PortfolioProvider');
   }
+
   return context;
 };

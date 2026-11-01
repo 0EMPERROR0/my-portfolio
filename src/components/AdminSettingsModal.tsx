@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { Project } from '../types/portfolio';
+import { supabase } from '../lib/supabase';
 
 export const AdminSettingsModal: React.FC = () => {
   const {
@@ -49,6 +50,7 @@ export const AdminSettingsModal: React.FC = () => {
   } = usePortfolio();
 
   const [passcodeInput, setPasscodeInput] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState<
     'hero' | 'projects' | 'about' | 'interests' | 'leadership' | 'beyond' | 'contact' | 'backup'
@@ -75,54 +77,98 @@ export const AdminSettingsModal: React.FC = () => {
     setTimeout(() => setSaveToast(false), 2000);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (verifyPasscode(passcodeInput)) {
-      setAuthError('');
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoginLoading(true);
+  setAuthError('');
+
+  try {
+    const success = await verifyPasscode(passcodeInput);
+
+    if (success) {
       setPasscodeInput('');
     } else {
-      setAuthError('Incorrect passcode. Please try again.');
+      setAuthError('Login failed. Check your password and try again.');
     }
-  };
+  } catch {
+    setAuthError('Unable to connect. Please try again.');
+  } finally {
+    setLoginLoading(false);
+  }
+};
 
-  const handleHeroPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleHeroPhotoUpload = async (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        updateData((prev) => ({
-          ...prev,
-          hero: {
-            ...prev.hero,
-            photoUrl: reader.result as string,
-          },
-        }));
-        triggerSaveNotification();
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
 
-  const handleProjectImageUpload = (projectId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const filePath = `portfolio/hero-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '-')}`;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        updateData((prev) => ({
-          ...prev,
-          projects: prev.projects.map((p) =>
-            p.id === projectId ? { ...p, imageUrl: reader.result as string } : p
-          ),
-        }));
-        triggerSaveNotification();
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  const { error } = await supabase.storage
+    .from('portfolio-images')
+    .upload(filePath, file);
+
+  if (error) {
+    alert(`Image upload failed: ${error.message}`);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('portfolio-images')
+    .getPublicUrl(filePath);
+
+  updateData((prev) => ({
+    ...prev,
+    hero: { ...prev.hero, photoUrl: urlData.publicUrl },
+  }));
+
+  triggerSaveNotification();
+};
+
+  const handleProjectImageUpload = async (
+  projectId: string,
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+
+  const filePath = `portfolio/project-${projectId}-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '-')}`;
+
+  const { error } = await supabase.storage
+    .from('portfolio-images')
+    .upload(filePath, file);
+
+  if (error) {
+    alert(`Image upload failed: ${error.message}`);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('portfolio-images')
+    .getPublicUrl(filePath);
+
+  updateData((prev) => ({
+    ...prev,
+    projects: prev.projects.map((p) =>
+      p.id === projectId
+        ? { ...p, imageUrl: urlData.publicUrl }
+        : p
+    ),
+  }));
+
+  triggerSaveNotification();
+};
 
   const handleAddProject = () => {
     const newId = `project-${Date.now()}`;
@@ -173,17 +219,26 @@ export const AdminSettingsModal: React.FC = () => {
     }
   };
 
-  const handleChangePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (changePasscode(currentPass, newPass)) {
-      setPassChangeStatus('Passcode updated successfully!');
-      setCurrentPass('');
-      setNewPass('');
-      setTimeout(() => setPassChangeStatus(null), 3000);
-    } else {
-      setPassChangeStatus('Failed: Current passcode is incorrect or new passcode is too short (< 4 characters).');
-    }
-  };
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (newPass.trim().length < 8) {
+    setPassChangeStatus('Password must be at least 8 characters.');
+    return;
+  }
+
+  const success = await changePasscode(currentPass, newPass);
+
+  if (success) {
+    setPassChangeStatus('Password updated successfully!');
+    setCurrentPass('');
+    setNewPass('');
+  } else {
+    setPassChangeStatus('Password update failed. Please try again.');
+  }
+
+  setTimeout(() => setPassChangeStatus(null), 3000);
+};
 
   const handleExport = () => {
     const jsonStr = exportDataJson();
@@ -302,7 +357,7 @@ export const AdminSettingsModal: React.FC = () => {
                   type="password"
                   value={passcodeInput}
                   onChange={(e) => setPasscodeInput(e.target.value)}
-                  placeholder="Enter passcode (default: parthiv)"
+                  placeholder="Enter passcode "
                   autoFocus
                   className="w-full px-4 py-3 rounded-lg bg-black/50 border border-white/15 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center font-mono"
                 />
@@ -322,9 +377,6 @@ export const AdminSettingsModal: React.FC = () => {
                 <span>Unlock Control Suite</span>
               </button>
 
-              <div className="text-[11px] font-mono text-neutral-400 pt-2 border-t border-white/[0.06]">
-                Default passcode: <code className="text-neutral-300">parthiv</code> or <code className="text-neutral-300">99100</code>
-              </div>
             </form>
           </div>
         ) : (
