@@ -3,119 +3,118 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { ArrowDown, ArrowUpRight, Github, Linkedin, Mail, Sparkles, SlidersHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, ArrowUpRight, Github, Linkedin, Mail, SlidersHorizontal, Eye } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
 
 export const Hero: React.FC = () => {
-  const { data, openAdminModal, isAdminAuthenticated } = usePortfolio();
+  const { data, openAdminModal } = usePortfolio();
 
   return (
     <section
       id="home"
-      className="relative min-h-[92vh] pt-32 pb-20 flex flex-col justify-center overflow-hidden bg-[#08080a]"
+      className="relative min-h-[96vh] pt-32 pb-16 flex flex-col justify-center overflow-hidden bg-black text-white"
     >
-      {/* Ambient background atmosphere */}
-      <div className="absolute inset-0 bg-grid-subtle opacity-40 pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[360px] bg-gradient-to-tr from-indigo-900/15 via-violet-800/10 to-transparent blur-[120px] rounded-full pointer-events-none" />
+      {/* Decorative Dot Matrix Clusters (Matching Reference Image) */}
+      <div
+        aria-hidden="true"
+        className="absolute top-24 left-6 sm:left-12 w-28 h-28 bg-dot-matrix opacity-40 pointer-events-none"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-16 right-6 sm:right-12 w-44 h-44 bg-dot-matrix opacity-35 pointer-events-none"
+      />
 
-      <div className="max-w-6xl mx-auto px-6 w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+      <div className="max-w-6xl mx-auto px-6 w-full relative z-10 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
-          {/* Left Column: Typographic Hierarchy */}
+          {/* Left Column: Typographic Hierarchy (Nothing Aesthetic) */}
           <div className="lg:col-span-7 flex flex-col items-start">
             
-            {/* Status & Academic Affiliation (Clean unboxed text, no pills) */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400 mb-6 font-mono tracking-tight">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-              <span>{data.hero.statusText}</span>
-              <span aria-hidden="true" className="text-neutral-600">·</span>
-              <span>{data.hero.collegeBadge}</span>
-              <span aria-hidden="true" className="text-neutral-600">·</span>
-              <span>KTU</span>
+            {/* Top Greeting Kicker */}
+            <div className="text-xs sm:text-sm font-mono tracking-widest text-neutral-400 mb-2">
+              Hello, I'm
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-[1.08] text-balance">
-              {data.hero.greeting}
+            {/* Prominent Dot-Matrix Name */}
+            <h1 className="font-dot text-4xl sm:text-6xl lg:text-7xl font-black tracking-wider text-white leading-none mb-3 text-balance">
+              {data.personalInfo.name || 'Parthiv R'}
             </h1>
 
-            {/* Supporting Heading */}
-            <h2 className="text-xl sm:text-2xl font-medium text-neutral-300 mb-5 leading-snug tracking-tight text-balance">
-              {data.hero.tagline}
+            {/* Restrained Red Accent Line */}
+            <div className="w-12 h-[2.5px] bg-[#d71920] mb-4 shadow-[0_0_10px_rgba(215,25,32,0.8)]" />
+
+            {/* Subtitle / Academic Status */}
+            <h2 className="text-sm sm:text-base font-mono text-neutral-200 tracking-wide mb-4">
+              {data.hero.statusText || 'B.Tech CSE Student'}
             </h2>
 
-            {/* Bio Description */}
-            <p className="text-base text-neutral-400 max-w-xl leading-relaxed mb-8">
-              {data.hero.bio}
+            {/* Bio Description Paragraph */}
+            <p className="text-sm sm:text-base text-neutral-400 max-w-lg leading-relaxed mb-8 font-normal font-sans">
+              {data.hero.bio ||
+                'Building practical and innovative software solutions with a focus on AI, usability, and real-world impact.'}
             </p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 mb-10 w-full sm:w-auto">
+            {/* Action Buttons (Monochrome Pills) */}
+            <div className="flex flex-wrap items-center gap-3.5 mb-10 w-full sm:w-auto">
               <a
                 href="#projects"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-lg shadow-indigo-950/40 hover:shadow-indigo-600/20 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 text-xs font-semibold tracking-wider text-black bg-white hover:bg-neutral-200 rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white w-full sm:w-auto"
               >
-                <span>View My Work</span>
-                <ArrowDown className="w-4 h-4" />
+                <span>View Projects</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
 
               <a
                 href="#contact"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-neutral-200 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 text-xs font-medium tracking-wider text-white bg-transparent hover:bg-white/[0.06] border border-neutral-700 hover:border-neutral-400 rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 w-full sm:w-auto"
               >
-                <span>Get In Touch</span>
-                <Mail className="w-4 h-4 text-neutral-400" />
+                <span>Get in Touch</span>
               </a>
             </div>
 
-            {/* Verified Social & Profiles */}
-            <div className="flex items-center gap-6 pt-6 border-t border-white/[0.06] w-full">
+            {/* Social Icons (Clean Monochrome) */}
+            <div className="flex items-center gap-5 pt-4">
               <a
                 href={data.personalInfo.github}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="flex items-center gap-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                aria-label="GitHub Profile"
+                className="text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded p-1"
               >
                 <Github className="w-4 h-4" />
-                <span>GitHub</span>
-                <ArrowUpRight className="w-3 h-3 opacity-60" />
               </a>
 
               <a
                 href={data.personalInfo.linkedin}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="flex items-center gap-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                aria-label="LinkedIn Profile"
+                className="text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded p-1"
               >
                 <Linkedin className="w-4 h-4" />
-                <span>LinkedIn</span>
-                <ArrowUpRight className="w-3 h-3 opacity-60" />
               </a>
 
               <a
                 href={`mailto:${data.personalInfo.email}`}
-                className="flex items-center gap-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                aria-label="Send Email"
+                className="text-neutral-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded p-1"
               >
                 <Mail className="w-4 h-4" />
-                <span>Email</span>
-                <ArrowUpRight className="w-3 h-3 opacity-60" />
               </a>
             </div>
+
           </div>
 
-          {/* Right Column: Parthiv R Portrait Showcase (Replaces APEX preview) */}
+          {/* Right Column: Clean Portrait Photo Frame (No phone design overlay) */}
           <div className="lg:col-span-5 w-full flex justify-center lg:justify-end">
-            <div className="group relative w-full max-w-[380px]">
+            <div className="relative w-full max-w-[340px] sm:max-w-[380px]">
               
-              {/* Ambient backdrop glow for the portrait */}
-              <div className="absolute -inset-1 bg-gradient-to-b from-indigo-500/20 via-violet-500/10 to-transparent rounded-2xl blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-
-              {/* Portrait Frame Card */}
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c14] shadow-2xl shadow-black/90">
+              {/* Clean Framed Card */}
+              <div className="relative rounded-3xl border border-neutral-800 bg-[#090909] p-2.5 shadow-2xl overflow-hidden group">
                 
                 {/* Photo Container */}
-                <div className="relative aspect-[3/4] w-full bg-black overflow-hidden">
+                <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-black">
                   <img
                     src={data.hero.photoUrl}
                     alt={`${data.personalInfo.name} Portrait`}
@@ -125,50 +124,44 @@ export const Hero: React.FC = () => {
                         target.src = '/public' + data.hero.photoUrl;
                       }
                     }}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                   />
-                  
-                  {/* Subtle lighting scrim to ensure legibility and dark mood */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c14] via-transparent to-transparent opacity-85" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent opacity-60" />
 
-                  {/* Corner Accent badge */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 text-[11px] font-mono text-neutral-200 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/10">
-                    <Sparkles className="w-3 h-3 text-indigo-400" />
-                    <span>Computer Science & Eng.</span>
+                  {/* Subtle bottom gradient to ensure text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+
+                  {/* Top-Right Red Accent Recording Dot */}
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 border border-neutral-800 backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#d71920] shadow-[0_0_8px_rgba(215,25,32,0.8)]" />
+                    <span className="text-[10px] font-mono text-neutral-300 tracking-wider">LIVE</span>
                   </div>
 
-                  {/* Owner quick edit button */}
-                  <button
-                    type="button"
-                    onClick={openAdminModal}
-                    title="Customize photo and content"
-                    aria-label="Customize photo and content"
-                    className="absolute top-4 right-4 p-2 rounded-md bg-black/60 hover:bg-black/80 backdrop-blur-md text-neutral-400 hover:text-white border border-white/10 transition-colors opacity-70 group-hover:opacity-100 focus:opacity-100"
-                  >
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Caption & Identity Overlay at Bottom of Card */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 space-y-1.5">
+                  {/* Bottom Info Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 space-y-1">
                     <div className="flex items-center justify-between">
-                      <div className="text-xl font-bold text-white tracking-tight">
-                        {data.personalInfo.name}
-                      </div>
-                      <span className="text-[11px] font-mono text-indigo-400">
-                        {data.hero.locationText}
+                      <span className="font-dot text-base font-bold text-white tracking-wider">
+                        {data.personalInfo.name.toUpperCase()}
+                      </span>
+                      <span className="text-[10px] font-mono text-neutral-400">
+                        {data.hero.locationText || 'KERALA'}
                       </span>
                     </div>
 
-                    <div className="text-xs text-neutral-300 font-normal">
-                      {data.hero.collegeBadge}
-                    </div>
-
-                    <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-neutral-400 border-t border-white/[0.08]">
-                      <span>Full-Stack & Applied ML</span>
-                      <span className="text-neutral-400">Kerala, India</span>
+                    <div className="text-xs font-mono text-neutral-400">
+                      {data.hero.collegeBadge || 'SREE BUDDHA COLLEGE OF ENG'}
                     </div>
                   </div>
+
+                  {/* Owner Quick Edit Button */}
+                  <button
+                    type="button"
+                    onClick={openAdminModal}
+                    title="Open Owner CMS Studio"
+                    aria-label="Customize Hero & Content"
+                    className="absolute top-4 left-4 z-20 p-2 rounded-full bg-black/70 hover:bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors backdrop-blur-md"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </button>
 
                 </div>
 
@@ -179,14 +172,14 @@ export const Hero: React.FC = () => {
 
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="mt-16 pt-8 flex items-center justify-center">
+        {/* Scroll Indicator (Chevron Down) */}
+        <div className="mt-14 flex items-center justify-center">
           <a
             href="#about"
-            className="group flex flex-col items-center gap-2 text-xs font-mono text-neutral-400 hover:text-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded p-1"
+            aria-label="Scroll to about section"
+            className="group flex flex-col items-center text-neutral-500 hover:text-white transition-colors p-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-full"
           >
-            <span>Scroll to explore</span>
-            <ArrowDown className="w-4 h-4 animate-bounce text-neutral-400 group-hover:text-indigo-400 transition-colors" />
+            <ChevronDown className="w-5 h-5 animate-bounce" />
           </a>
         </div>
 

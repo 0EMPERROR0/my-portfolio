@@ -44,7 +44,7 @@ function PortfolioMain() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-neutral-100 flex flex-col font-sans selection:bg-indigo-500/20 selection:text-indigo-200">
+    <div className="min-h-screen bg-black text-neutral-100 flex flex-col font-sans selection:bg-[#d71920]/30 selection:text-white">
       {/* 3-Zone Sticky Navigation Bar */}
       <Navbar activeSection={activeSection} />
 

@@ -9,29 +9,38 @@ import { usePortfolio } from '../context/PortfolioContext';
 
 export const PersonalSide: React.FC = () => {
   const { data } = usePortfolio();
-  const [selectedPursuit, setSelectedPursuit] = useState<number>(1); // default to automotive concept
+  const [selectedPursuit, setSelectedPursuit] = useState<number>(1);
 
   const icons = [Dumbbell, Car, Film, Tv, Gamepad2, Sparkles];
 
   return (
-    <section id="beyond" className="py-24 bg-[#09090c] relative border-t border-white/[0.06]">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="beyond" className="py-24 bg-black relative border-t border-neutral-900 text-white">
+      {/* Decorative Matrix Grid */}
+      <div
+        aria-hidden="true"
+        className="absolute top-10 right-10 w-32 h-32 bg-dot-matrix opacity-20 pointer-events-none"
+      />
+
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         
         {/* Section Header */}
         <div className="mb-14">
-          <div className="text-xs font-mono text-indigo-400 tracking-wider mb-2 uppercase">
-            05. Personal Pursuits & Dimensions
+          <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-neutral-400 mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#d71920]" />
+            <span>( 05 )</span>
+            <span className="text-neutral-600">/</span>
+            <span>PERSONAL PURSUITS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
-            Beyond the screen.
+          <h2 className="font-dot text-3xl sm:text-5xl font-black tracking-wider text-white mb-4">
+            BEYOND THE SCREEN.
           </h2>
-          <p className="text-neutral-400 max-w-2xl text-base sm:text-lg leading-relaxed">
+          <p className="text-neutral-400 max-w-2xl text-sm sm:text-base leading-relaxed font-sans">
             The disciplines, stories, and aesthetics outside of software that enrich my perspective and creative thinking.
           </p>
         </div>
 
         {/* Featured Showcase: Automotive Design & Form Studies */}
-        <div className="mb-12 rounded-2xl bg-[#0c0c12] border border-white/10 overflow-hidden shadow-2xl">
+        <div className="mb-12 rounded-3xl bg-[#090909] border border-neutral-800 overflow-hidden shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
             
             <div className="lg:col-span-7 relative aspect-video lg:aspect-auto lg:h-[380px] bg-black overflow-hidden">
@@ -39,26 +48,27 @@ export const PersonalSide: React.FC = () => {
                 src={data.beyondScreen.automotiveImage}
                 alt="Automotive aerodynamic supercar concept clay styling and digital vector lines"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center filter contrast-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-[#0c0c12] opacity-80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-[#090909] opacity-90" />
               
-              <div className="absolute top-4 left-4 text-xs font-mono text-neutral-300 bg-black/60 px-3 py-1.5 rounded border border-white/10 backdrop-blur-md">
-                Design Study · Automotive Aerodynamics
+              <div className="absolute top-4 left-4 text-xs font-mono text-white bg-black/80 px-3 py-1.5 rounded-full border border-neutral-800 backdrop-blur-md flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d71920]" />
+                <span>FORM STUDY // AERODYNAMICS</span>
               </div>
             </div>
 
             <div className="lg:col-span-5 p-7 sm:p-10 space-y-4">
-              <div className="text-xs font-mono text-indigo-400 uppercase tracking-wider">
+              <div className="text-xs font-mono text-neutral-400 uppercase tracking-widest">
                 {data.beyondScreen.automotiveSubtitle}
               </div>
-              <h3 className="text-2xl font-bold text-white tracking-tight">
+              <h3 className="font-dot text-2xl font-bold text-white tracking-wider">
                 {data.beyondScreen.automotiveTitle}
               </h3>
-              <p className="text-sm text-neutral-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-sans">
                 {data.beyondScreen.automotiveDescription}
               </p>
-              <div className="pt-2 border-t border-white/[0.06] text-xs font-mono text-neutral-400">
+              <div className="pt-3 border-t border-neutral-800 text-xs font-mono text-neutral-300">
                 {data.beyondScreen.automotiveAxiom}
               </div>
             </div>
@@ -76,35 +86,35 @@ export const PersonalSide: React.FC = () => {
               <div
                 key={idx}
                 onClick={() => setSelectedPursuit(idx)}
-                className={`p-6 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                className={`p-6 rounded-3xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-indigo-950/20 border-indigo-500/40 shadow-lg shadow-indigo-950/30'
-                    : 'bg-white/[0.02] border-white/[0.06] hover:border-white/20'
+                    ? 'bg-neutral-950 border-white shadow-lg'
+                    : 'bg-[#090909] border-neutral-800 hover:border-neutral-600'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2.5 rounded-lg bg-white/[0.04] text-indigo-400 border border-white/[0.06]">
-                      <Icon className="w-5 h-5" />
+                    <div className="p-2.5 rounded-2xl bg-black text-white border border-neutral-800">
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-mono text-neutral-400">
+                    <span className="text-[10px] font-mono text-neutral-400 border border-neutral-800 px-2.5 py-0.5 rounded-full">
                       {item.badge}
                     </span>
                   </div>
 
-                  <h4 className="text-base font-semibold text-white tracking-tight mb-1">
+                  <h4 className="text-sm font-semibold text-white tracking-wide mb-1 font-sans">
                     {item.title}
                   </h4>
                   <div className="text-xs text-neutral-400 font-mono mb-3">
                     {item.category}
                   </div>
 
-                  <p className="text-xs text-neutral-300 leading-relaxed mb-4">
+                  <p className="text-xs text-neutral-400 leading-relaxed mb-4 font-sans">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-white/[0.04] text-[11px] text-neutral-400 italic">
+                <div className="pt-3 border-t border-neutral-800/80 text-[11px] text-neutral-300 font-mono italic">
                   "{item.takeaway}"
                 </div>
               </div>
